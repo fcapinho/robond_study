@@ -55,6 +55,9 @@ void search(Map map, Planner planner)
     vector<vector<int> > closed(map.mapHeight, vector<int>(map.mapWidth));
     closed[planner.start[0]][planner.start[1]] = 1;
 
+    // Create path array filled with -1
+    vector<vector<int> > path(map.mapHeight, vector<int>(map.mapWidth, -1));    
+
     // Create expand array filled with -1
     vector<vector<int> > expand(map.mapHeight, vector<int>(map.mapWidth, -1));
 
@@ -116,14 +119,30 @@ void search(Map map, Planner planner)
                             int g2 = g + planner.cost;
                             open.push_back({ g2, x2, y2 });
                             closed[x2][y2] = 1;
+                            path[x2][y2] = i;
                         }
                     }
                 }
             }
         }
     }
-    // Print the expansion List
-    print2DVector(expand);
+
+    vector<vector<string> > policy(map.mapHeight, vector<string>(map.mapWidth, "-"));
+    policy[planner.goal[0]][planner.goal[1]] = "*";
+    
+    if (found) {
+        int x = planner.goal[0];
+        int y = planner.goal[1];      
+        do {
+            int movement = path[x][y];
+            x = x - planner.movements[movement][0];
+            y = y - planner.movements[movement][1];
+            policy[x][y] = planner.movements_arrows[movement];
+        } while ( (x != planner.start[0]) || (y != planner.start[1]) );
+    }
+
+    print2DVector(policy);
+
 }
 
 int main()
