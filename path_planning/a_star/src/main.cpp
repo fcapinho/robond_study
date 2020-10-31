@@ -9,8 +9,8 @@ using namespace std;
 // Map class
 class Map {
 public:
-    const static int mapHeight = /* #### TODO: mapHeight #### */
-    const static int mapWidth = /* #### TODO: mapWidth #### */
+    const static int mapHeight = 300;
+    const static int mapWidth = 150;
     vector<vector<double> > map = GetMap();
     vector<vector<int> > grid = MaptoGrid();
     vector<vector<int> > heuristic = GenerateHeuristic();
@@ -46,6 +46,13 @@ private:
            0: Free Space
            1: Occupied + Unkown Space
         */
+
+        for (int i = 0; i < mapHeight; i++) {
+            for (int j = 0; j < mapWidth; j++) {
+                grid[i][j] = map[i][j] < 0 ? 0 : 1;
+            }
+        }
+
         return grid;
     }
 
@@ -55,6 +62,14 @@ private:
         int goal[2] = { 60, 50 };
         vector<vector<int> > heuristic(mapHeight, vector<int>(mapWidth));
         // Generate a Manhattan heursitic vector
+        for (int i = 0; i < mapHeight; i++) {
+            for (int j = 0; j < mapWidth; j++) {
+                int xd = goal[0] - i;
+                int yd = goal[1] - j;
+                heuristic[i][j] = abs(xd) + abs(yd);
+            }
+        }
+
         return heuristic;
     }
 };
@@ -62,8 +77,8 @@ private:
 // Planner class
 class Planner : Map {
 public:
-    int start[2] = /* #### TODO: start #### */
-    int goal[2] = /* #### TODO: goal #### */
+    int start[2] = { 230, 145 };
+    int goal[2] = { 60, 50 };
     int cost = 1;
 
     string movements_arrows[4] = { "^", "<", "v", ">" };
@@ -194,7 +209,7 @@ Planner search(Map map, Planner planner)
 
     // Print the robot path
     //cout << endl;
-    //print2DVector(policy);
+    print2DVector(policy);
 
     return planner;
 }
