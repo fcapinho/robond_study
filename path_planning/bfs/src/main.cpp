@@ -2,7 +2,6 @@
 #include <string.h>
 #include <vector>
 #include <algorithm>
-#include <array>
 
 using namespace std;
 
@@ -49,70 +48,82 @@ void print2DVector(T Vec)
     }
 }
 
-void printTriplet(array<int, 3> triplet)
-{
-    cout << "[ ";
-    for(const auto& t: triplet) {
-        cout << t << ' ';
-    }
-    cout << "]" << endl;
-}
-
-/*#### TODO: Code the search function which will generate the expansion list ####*/
-// You are only required to print the final triplet values
+/* #### TODO: Modify the search function and generate the policy vector #### */
 void search(Map map, Planner planner)
 {
-    array<int, 3> cell_picked;
-    vector<array<int, 3>> open_list = { {0, planner.start[0], planner.start[1]} };
-    int expansion = 0;
-    vector<array<int, 2>> visited_cells = { {planner.start[0], planner.start[1]} };
+    // Create a closed 2 array filled with 0s and first element 1
+    vector<vector<int> > closed(map.mapHeight, vector<int>(map.mapWidth));
+    closed[planner.start[0]][planner.start[1]] = 1;
 
-    vector<vector<int>> expansion_matrix(map.mapHeight, vector<int>(map.mapWidth, -1));
+    // Create expand array filled with -1
+    vector<vector<int> > expand(map.mapHeight, vector<int>(map.mapWidth, -1));
 
-    while (!open_list.empty()) {
-        cout << "Expansion #: " << expansion << endl;
-    
-        // Pick cell
-        cell_picked = open_list.back();
-        open_list.pop_back();
+    // Defined the triplet values
+    int x = planner.start[0];
+    int y = planner.start[1];
+    int g = 0;
 
-        expansion_matrix[cell_picked[1]][cell_picked[2]] = expansion++;
+    // Store the expansions
+    vector<vector<int> > open;
+    open.push_back({ g, x, y });
 
-        cout << "Next cell: "; printTriplet(cell_picked);
-        
-        // Check if reached the goal
-        if ( (cell_picked[1] == planner.goal[0]) && (cell_picked[2] == planner.goal[1])) {
-            printTriplet(cell_picked);
-            break;
+    // Flags and counters
+    bool found = false;
+    bool resign = false;
+    int count = 0;
+
+    int x2;
+    int y2;
+
+    // While I am still searching for the goal and the problem is solvable
+    while (!found && !resign) {
+        // Resign if no values in the open list and you can't expand anymore
+        if (open.size() == 0) {
+            resign = true;
+            cout << "Failed to reach a goal" << endl;
         }
+        // Keep expanding
+        else {
+            // Remove triplets from the open list
+            sort(open.begin(), open.end());
+            reverse(open.begin(), open.end());
+            vector<int> next;
+            // Stored the poped value into next
+            next = open.back();
+            open.pop_back();
 
-        // Expand the search
-        for (const auto& m: planner.movements) {
-            int new_x = cell_picked[1] + m[0];
-            int new_y = cell_picked[2] + m[1];
-            // Check for valid coordinates
-            if ( (new_x >= 0) && (new_x < map.mapHeight) && (new_y >= 0) && (new_y < map.mapWidth) ) {
-                // Check for visited cell
-                vector<array<int, 2>>::iterator it;
-                array<int, 2> new_cell = { new_x, new_y };
-                it = find (visited_cells.begin(), visited_cells.end(), new_cell );
-                if (it == visited_cells.end()) {
-                    // Check for empty cell
-                    if ( map.grid[new_x][new_y] == 0) {
-                        array<int, 3> new_item = { cell_picked[0] + planner.cost, new_x, new_y };
-                        open_list.insert(open_list.begin(), new_item);
-                        visited_cells.push_back(new_cell);
+            x = next[1];
+            y = next[2];
+            g = next[0];
+
+            // Fill the expand vectors with count
+            expand[x][y] = count;
+            count += 1;
+            
+            // Check if we reached the goal:
+            if (x == planner.goal[0] && y == planner.goal[1]) {
+                found = true;
+                //cout << "[" << g << ", " << x << ", " << y << "]" << endl;
+            }
+
+            //else expand new elements
+            else {
+                for (int i = 0; i < planner.movements.size(); i++) {
+                    x2 = x + planner.movements[i][0];
+                    y2 = y + planner.movements[i][1];
+                    if (x2 >= 0 && x2 < map.grid.size() && y2 >= 0 && y2 < map.grid[0].size()) {
+                        if (closed[x2][y2] == 0 and map.grid[x2][y2] == 0) {
+                            int g2 = g + planner.cost;
+                            open.push_back({ g2, x2, y2 });
+                            closed[x2][y2] = 1;
+                        }
                     }
                 }
             }
         }
     }
-
-    if (open_list.empty()) {
-        cout << "Roadblock" << endl;
-    } else {
-        print2DVector(expansion_matrix);
-    }
+    // Print the expansion List
+    print2DVector(expand);
 }
 
 int main()
