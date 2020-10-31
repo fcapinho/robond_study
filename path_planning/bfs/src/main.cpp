@@ -2,6 +2,7 @@
 #include <string.h>
 #include <vector>
 #include <algorithm>
+#include <cmath>
 
 using namespace std;
 
@@ -34,6 +35,40 @@ public:
         { 1, 0 },
         { 0, 1 }
     };
+
+    vector<vector<int>> heuristic;
+
+    Planner() 
+    {
+        heuristic = vector<vector<int>>(mapHeight, vector<int>(mapWidth));
+        buildHeuristic();
+    }
+
+private:
+    void buildHeuristic() {
+        for (int i = 0; i < heuristic.size(); i++) {
+            for (int j = 0; j < heuristic[i].size(); j++) {
+                int xd = goal[0] - i;
+                int yd = goal[1] - j;
+                heuristic[i][j] = manhattanDistance(xd, yd);
+            }
+        }
+    };
+
+    int manhattanDistance(int xd, int yd) 
+    {
+        return abs(xd) + abs(yd);
+    }
+
+    int euclideanDistance(int xd, int yd)
+    {
+        return sqrt (pow(xd, 2) + pow(yd, 2));
+    }
+    
+    int chebyshevDistance(int xd, int yd)
+    {
+        return max(abs(xd), abs(yd));
+    }
 };
 
 // Template function to print 2D vectors of any type
@@ -48,7 +83,7 @@ void print2DVector(T Vec)
     }
 }
 
-/* #### TODO: Modify the search function and generate the policy vector #### */
+/* #### TODO: Modify the search function and implement the A* algorithm #### */
 void search(Map map, Planner planner)
 {
     // Create a closed 2 array filled with 0s and first element 1
@@ -65,10 +100,11 @@ void search(Map map, Planner planner)
     int x = planner.start[0];
     int y = planner.start[1];
     int g = 0;
+    int f = g + planner.heuristic[x][y];
 
     // Store the expansions
     vector<vector<int> > open;
-    open.push_back({ g, x, y });
+    open.push_back({ f, g, x, y });
 
     // Flags and counters
     bool found = false;
@@ -95,9 +131,9 @@ void search(Map map, Planner planner)
             next = open.back();
             open.pop_back();
 
-            x = next[1];
-            y = next[2];
-            g = next[0];
+            x = next[2];
+            y = next[3];
+            g = next[1];
 
             // Fill the expand vectors with count
             expand[x][y] = count;
@@ -117,7 +153,8 @@ void search(Map map, Planner planner)
                     if (x2 >= 0 && x2 < map.grid.size() && y2 >= 0 && y2 < map.grid[0].size()) {
                         if (closed[x2][y2] == 0 and map.grid[x2][y2] == 0) {
                             int g2 = g + planner.cost;
-                            open.push_back({ g2, x2, y2 });
+                            int f2 = g2 + planner.heuristic[x2][y2];
+                            open.push_back({ f2, g2, x2, y2 });
                             closed[x2][y2] = 1;
                             path[x2][y2] = i;
                         }
@@ -141,8 +178,8 @@ void search(Map map, Planner planner)
         } while ( (x != planner.start[0]) || (y != planner.start[1]) );
     }
 
+    print2DVector(expand);
     print2DVector(policy);
-
 }
 
 int main()
