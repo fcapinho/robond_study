@@ -67,19 +67,23 @@ void search(Map map, Planner planner)
     int expansion = 0;
     vector<array<int, 2>> visited_cells = { {planner.start[0], planner.start[1]} };
 
-    while (!open_list.empty()) {
-        // cout << "Expansion #: " << expansion++ << endl;
+    vector<vector<int>> expansion_matrix(map.mapHeight, vector<int>(map.mapWidth, -1));
 
+    while (!open_list.empty()) {
+        cout << "Expansion #: " << expansion << endl;
+    
         // Pick cell
         cell_picked = open_list.back();
         open_list.pop_back();
 
-        // cout << "Next cell: "; printTriplet(cell_picked);
+        expansion_matrix[cell_picked[1]][cell_picked[2]] = expansion++;
+
+        cout << "Next cell: "; printTriplet(cell_picked);
         
         // Check if reached the goal
         if ( (cell_picked[1] == planner.goal[0]) && (cell_picked[2] == planner.goal[1])) {
             printTriplet(cell_picked);
-            return;
+            break;
         }
 
         // Expand the search
@@ -104,7 +108,11 @@ void search(Map map, Planner planner)
         }
     }
 
-    cout << "Roadblock" << endl;
+    if (open_list.empty()) {
+        cout << "Roadblock" << endl;
+    } else {
+        print2DVector(expansion_matrix);
+    }
 }
 
 int main()
